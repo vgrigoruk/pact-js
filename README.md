@@ -3,7 +3,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/pact-foundation/pact-js/badge.svg?branch=master)](https://coveralls.io/github/pact-foundation/pact-js?branch=master)
 [![Code Climate](https://codeclimate.com/github/pact-foundation/pact-js/badges/gpa.svg)](https://codeclimate.com/github/pact-foundation/pact-js)
 [![Issue Count](https://codeclimate.com/github/pact-foundation/pact-js/badges/issue_count.svg)](https://codeclimate.com/github/pact-foundation/pact-js)
-[![Dependency Status](https://gemnasium.com/badges/github.com/pact-foundation/pact-js.svg)](https://gemnasium.com/github.com/pact-foundation/pact-js)
 [![npm](https://img.shields.io/github/license/pact-foundation/pact-js.svg?maxAge=2592000)](https://github.com/pact-foundation/pact-js/blob/master/LICENSE)
 [![slack](http://slack.pact.io/badge.svg)](http://slack.pact.io)
 
@@ -28,8 +27,7 @@ how to get going.
 
 - [Pact JS](#pact-js)
   - [Installation](#installation)
-    - [Latest (5.x.x)](#latest-5xx)
-    - [Stable (4.x.x)](#stable-4xx)
+  - [Versions](#versions)
   - [Using Pact JS](#using-pact-js)
     - [Message and Asynchronous Support](#message-and-asynchronous-support)
     - [Consumer Side Testing](#consumer-side-testing)
@@ -59,32 +57,31 @@ how to get going.
     - [Re-run specific verification failures](#re-run-specific-verification-failures)
     - [Timeout](#timeout)
     - [Note on Jest](#note-on-jest)
+    - [Debugging](#debugging)
+  - [Contributing](#contributing)
+  - [Contact](#contact)
 
 <!-- /TOC -->
 
 ## Installation
 
-### Latest (5.x.x)
+## Versions
 
-```
-npm install --save-dev @pact-foundation/pact
-```
+| Version   | Stable           | [Spec] Compatibility | Docs                | Installation                                |
+| ----------| ---------------- | -------------------- | ------------------- | --------------------------------------------|
+| `6.x.x`   | No (beta)        | `2`, `3`*            | See [v6] docs       | `npm i -S @pact-foundation/pact@prerelease` |
+| `5.x.x`   | Yes              | `2`                  | You are here        | `npm i -S @pact-foundation/pact@5.x.x`      |
+| `4.x.x`   | Yes (deprecated) | Up to `2`            | See [v4] docs       | `npm i -S pact`                             |
 
-_NOTE_: the `5.x.x` release contains several breaking changes from the previous version and will be maintained in parallel with the previous stable version. See the [`4.x.x`](https://github.com/pact-foundation/pact-js/tree/4.x.x) documentation for more details.
+See the [Changelog] for versions and their history.
 
-### Stable (4.x.x)
-
-```
-npm install --save-dev pact
-```
-
-See [`4.x.x` documentation](https://github.com/pact-foundation/pact-js/tree/4.x.x) for usage details.
+_* v3 support is limited to the subset of functionality in the [Pact Specification v3] required to enable language inter-operable [Message support]._
 
 ## Using Pact JS
 
 ### Message and Asynchronous Support
 
-Interested in trying pact on Message Queues, Lambdas, WebSockets and more? Check out our [experimental support](https://github.com/pact-foundation/pact-js/tree/feat/message-pact) and provide [feedback](https://github.com/pact-foundation/pact-js/issues/166) on the API before it is rolled into the main library.
+Interested in trying pact on Message Queues, Lambdas, WebSockets and more? Check out our [experimental support](https://github.com/pact-foundation/pact-js/tree/6.x.x) in the `6.x.x` release and provide [feedback](https://github.com/pact-foundation/pact-js/issues/166) on the API before it is rolled into the main library.
 
 ### Consumer Side Testing
 
@@ -97,6 +94,7 @@ const { Pact } = require('pact')
 The `Pact` class provides the following high-level APIs, they are listed in the order in which they typically get called in the lifecycle of testing a consumer:
 
 #### API
+
 |API                    |Options     |Returns|Description                                       |
 |-----------------------|------------|------------------------------------------------------|---|
 |`new Pact(options)`        |See constructor options below |`Object` |Creates a Mock Server test double of your Provider API. If you need multiple Providers for a scenario, you can create as many as these as you need.                  |
@@ -124,6 +122,7 @@ The `Pact` class provides the following high-level APIs, they are listed in the 
 | `pactfileWriteMode` | no | string | Control how the Pact files are written. Choices: 'overwrite' 'update' or 'none'. Defaults to 'overwrite'|
 
 #### Example
+
 The first step is to create a test for your API Consumer. The example below uses [Mocha](https://mochajs.org), and demonstrates the basic approach:
 
 1. Create the Pact object
@@ -136,6 +135,10 @@ The first step is to create a test for your API Consumer. The example below uses
 Check out the `examples` folder for examples with Karma Jasmine, Mocha and Jest. The example below is taken from the [integration spec](https://github.com/pact-foundation/pact-js/blob/master/src/pact.integration.spec.ts).
 
 ```javascript
+/**
+ * The following example is for Pact version 5
+ */
+
 const path = require('path')
 const chai = require('chai')
 const { Pact } = require('@pact-foundation/pact')
@@ -215,8 +218,9 @@ describe('Pact', () => {
       // (6) write the pact file for this consumer-provider pair,
       // and shutdown the associated mock server.
       // You should do this only _once_ per Provider you are testing.
-      after(() => {
+      after((done) => {
         provider.finalize()
+          .then(() => done())
       })
     })
   })
@@ -652,7 +656,7 @@ You have a number of options to achieve this feat:
 
     See this [example](https://github.com/tarciosaraiva/pact-melbjs/blob/master/helper.js) and this [issue](https://github.com/pact-foundation/pact-js/issues/11) for more.
 
-1. Set `pactfileWriteMode` to `update` in the `Pact()` constructor
+1.  Set `pactfileWriteMode` to `merge` in the `Pact()` constructor
 
     This will allow you to have multiple independent tests for a given Consumer-Provider pair, without it clobbering previous interactions, thereby allowing you to incrementally build up or modify your pact files.
 
@@ -695,6 +699,7 @@ to review your unit testing timeout to ensure it has sufficient time to start th
 See [here](http://stackoverflow.com/questions/42496401/all-pact-js-tests-are-failing-with-same-errors/42518752) for more details.
 
 ### Note on Jest
+
 Jest uses JSDOM under the hood which may cause issues with libraries making HTTP request.
 
 You'll need to add the following snippet to your `package.json` to ensure it uses
@@ -712,7 +717,7 @@ Also, [from Jest 20](https://facebook.github.io/jest/blog/2017/05/06/jest-20-del
 /**
  * @jest-environment node
  */
- ```
+```
 
 Jest also runs tests in parallel by default, which can be problematic with Pact which is stateful. See [parallel tests](#parallel-tests) to see how to make it run in parallel, or run Jest with the `--runInBand` [option](https://facebook.github.io/jest/docs/en/cli.html#runinband) to run them sequentially.
 
@@ -737,6 +742,7 @@ Try starting the mock service manually and seeing if it comes up. When submittin
 ```
 
 ## Contributing
+
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
@@ -751,11 +757,32 @@ The vision is to have a compatible `Pact` implementation in all the commonly use
 
 Join us in Slack
 
-<a href="http://slack.pact.io"><img src="http://slack.pact.io/badge.svg"></a>
-
+<a href="http://slack.pact.io">
+  <img src="http://slack.pact.io/badge.svg">
+</a>
 
 or
 * Slack: [slack.pact.io](http://slack.pact.io)
 * Twitter: [@pact_up](https://twitter.com/pact_up)
 * Stack Overflow: https://stackoverflow.com/questions/tagged/pact
 * Google users group: https://groups.google.com/forum/#!forum/pact-support
+
+[Getting started with Pact]: http://dius.com.au/2016/02/03/microservices-pact/
+[v4]: https://github.com/pact-foundation/pact-js/tree/4.x.x
+[v5]: https://github.com/pact-foundation/pact-js/tree/5.x.x
+[v6]: https://github.com/pact-foundation/pact-js/tree/6.x.x
+[Spec]: https://github.com/pact-foundation/pact-specification
+[Pact Wiki]: https://github.com/pact-foundation/pact-ruby/wiki
+[Getting started with Pact]: http://dius.com.au/2016/02/03/microservices-pact/
+[Pact website]: http://docs.pact.io/
+[Slack channel]: http://slack.pact.io
+[@pact_up]: https://twitter.com/pact_up
+[Pact Specification v2]: https://github.com/pact-foundation/pact-specification/tree/version-2
+[Pact Specification v3]: https://github.com/pact-foundation/pact-specification/tree/version-3
+[CLI tools]: https://github.com/pact-foundation/pact-ruby-standalone/releases
+[Installation]: #installation
+[Message support]: https://github.com/pact-foundation/pact-specification/tree/version-3#introduces-messages-for-services-that-communicate-via-event-streams-and-message-queues
+[Changelog]: https://github.com/pact-foundation/pact-js/blob/master/CHANGELOG.md
+[Pact Broker]: https://github.com/pact-foundation/pact_broker
+[hosted broker]: pact.dius.com.au
+[can-i-deploy tool]: https://github.com/pact-foundation/pact_broker/wiki/Provider-verification-results
