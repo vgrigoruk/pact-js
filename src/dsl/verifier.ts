@@ -55,7 +55,6 @@ export class Verifier {
   private address: string = "http://localhost"
   private stateSetupPath: string = "/_pactSetup"
   private config: VerifierOptions
-  private deprecatedFields: string[] = ["providerStatesSetupUrl"]
 
   constructor(config?: VerifierOptions) {
     if (config) {
@@ -85,21 +84,27 @@ export class Verifier {
       )
     }
 
-    // Start the verification CLI proxy server
-    const app = this.createProxy()
-    const server = this.startProxy(app)
+    if (this.config.providerStatesSetupUrl) {
+      return qToPromise<any>(
+        pact.verifyPacts(this.config as PactNodeVerifierOptions)
+      )
+    } else {
+      // Start the verification CLI proxy server
+      const app = this.createProxy()
+      const server = this.startProxy(app)
 
-    // Run the verification once the proxy server is available
-    return this.waitForServerReady(server)
-      .then(this.runProviderVerification())
-      .then(result => {
-        server.close()
-        return result
-      })
-      .catch(e => {
-        server.close()
-        throw e
-      })
+      // Run the verification once the proxy server is available
+      return this.waitForServerReady(server)
+        .then(this.runProviderVerification())
+        .then(result => {
+          server.close()
+          return result
+        })
+        .catch(e => {
+          server.close()
+          throw e
+        })
+    }
   }
 
   // Run the Verification CLI process
@@ -199,14 +204,6 @@ export class Verifier {
 
   private setConfig(config: VerifierOptions) {
     this.config = config
-
-    this.deprecatedFields.forEach(f => {
-      if ((this.config as any)[f]) {
-        logger.warn(
-          `${f} is deprecated, and will be removed in future versions`
-        )
-      }
-    })
 
     if (this.config.validateSSL === undefined) {
       this.config.validateSSL = true
