@@ -7,6 +7,7 @@ import serviceFactory from "@pact-foundation/pact-node"
 import logger from "../common/logger"
 import * as http from "http"
 import * as express from "express"
+import * as _ from "lodash"
 
 chai.use(chaiAsPromised)
 
@@ -98,6 +99,17 @@ describe("Verifier", () => {
         })
 
         expect(spy.callCount).to.eql(0)
+      })
+    })
+    context("when providerStatesSetupUrl is provided", () => {
+      it("logs a warning when stateHandlers are also provided", () => {
+        spy = sinon.spy(logger, "warn")
+        v["setConfig"]({
+          ...opts,
+          providerStatesSetupUrl: "http://foo.com",
+        })
+
+        expect(spy.callCount).to.eql(1)
       })
     })
   })

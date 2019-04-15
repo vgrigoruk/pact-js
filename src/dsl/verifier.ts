@@ -84,40 +84,34 @@ export class Verifier {
       )
     }
 
-    if (this.config.providerStatesSetupUrl) {
-      return qToPromise<any>(
-        pact.verifyPacts(this.config as PactNodeVerifierOptions)
-      )
-    } else {
-      // Start the verification CLI proxy server
-      const app = this.createProxy()
-      const server = this.startProxy(app)
+    // Start the verification CLI proxy server
+    const app = this.createProxy()
+    const server = this.startProxy(app)
 
-      // Run the verification once the proxy server is available
-      return this.waitForServerReady(server)
-        .then(this.runProviderVerification())
-        .then(result => {
-          server.close()
-          return result
-        })
-        .catch(e => {
-          server.close()
-          throw e
-        })
-    }
+    // Run the verification once the proxy server is available
+    return this.waitForServerReady(server)
+      .then(this.runProviderVerification())
+      .then(result => {
+        server.close()
+        return result
+      })
+      .catch(e => {
+        server.close()
+        throw e
+      })
   }
 
   // Run the Verification CLI process
   private runProviderVerification() {
     return (server: http.Server) => {
       const opts = {
-        ...omit(this.config, "handlers"),
-        ...{ providerBaseUrl: `${this.address}:${server.address().port}` },
         ...{
           providerStatesSetupUrl: `${this.address}:${server.address().port}${
             this.stateSetupPath
           }`,
         },
+        ...omit(this.config, "handlers"),
+        ...{ providerBaseUrl: `${this.address}:${server.address().port}` },
       } as PactNodeVerifierOptions
 
       return qToPromise<any>(pact.verifyPacts(opts))
@@ -210,6 +204,11 @@ export class Verifier {
     }
     if (this.config.changeOrigin === undefined) {
       this.config.changeOrigin = false
+    }
+    if (this.config.providerStatesSetupUrl && this.config.stateHandlers) {
+      logger.warn(
+        `stateHandlers are ignored when providerStatesSetupUrl is specified`
+      )
     }
 
     if (this.config.logLevel && !isEmpty(this.config.logLevel)) {
