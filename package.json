@@ -76,7 +76,7 @@
   },
   "homepage": "http://docs.pact.io/documentation/javascript.html",
   "dependencies": {
-    "@pact-foundation/pact-node": "^8.1.2",
+    "@pact-foundation/pact-node": "git://github.com/vgrigoruk/pact-node#79eacd018de8c036020bb14cc0a628fc5b0e6aaa",
     "@types/express": "^4.11.1",
     "body-parser": "^1.18.2",
     "bunyan": "^1.8.12",

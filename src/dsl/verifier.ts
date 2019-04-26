@@ -37,12 +37,11 @@ export interface VerifierOptions {
   providerStatesSetupUrl?: string
   pactBrokerUsername?: string
   pactBrokerPassword?: string
-  consumerVersionTag?: string
+  consumerVersionTag?: string | string[]
   customProviderHeaders?: string[]
   publishVerificationResult?: boolean
   providerVersion?: string
   pactBrokerUrl?: string
-  tags?: string[]
   timeout?: number
   monkeypatch?: string
   format?: "json" | "RspecJunitFormatter"
